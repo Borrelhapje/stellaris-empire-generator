@@ -110,6 +110,10 @@ func always(empire Empire) bool {
 	return true
 }
 
+func normalAuth() Predicate {
+	return auth("Democratic", "Oligarchy", "Dictatorial", "Imperial")
+}
+
 var allCivics = []Civic{
 	{name: "Constructobot", isAllowed: auth("Machine Intelligence")},
 	{name: "Delegated Functions", isAllowed: auth("Machine Intelligence")},
@@ -160,6 +164,47 @@ var allCivics = []Civic{
 	{name: "Indentured Assets", isAllowed: and(auth("Corporate"), excludeCivic("Corporate Hedonism"))},
 	{name: "Naval Contractors", isAllowed: auth("Corporate")},
 	{name: "Private Military Companies", isAllowed: auth("Corporate")},
+	{name: "Anglers", isAllowed: and(normalAuth(), excludeCivic("Agrarian Idyll"))},
+	{name: "Byzantine Bureaucracy", isAllowed: normalAuth()},
+	{name: "Corvee System", isAllowed: and(normalAuth(), excludeCivic("Free Haven"))},
+	{name: "Cutthroat Politics", isAllowed: normalAuth()},
+	{name: "Diplomatic Corps", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
+	{name: "Efficient Bureaucracy", isAllowed: normalAuth()},
+	{name: "Environmentalist", isAllowed: normalAuth()},
+	{name: "Functional Architecture", isAllowed: normalAuth()},
+	{name: "Masterful Crafters", isAllowed: normalAuth()},
+	{name: "Memorialists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"))},
+	{name: "Merchant Guilds", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Aristocratic Elite", "Technocracy"))},
+	{name: "Mining Guilds", isAllowed: normalAuth()},
+	{name: "Philosopher King", isAllowed: auth("Dictatorial", "Imperial")},
+	{name: "Pleasure Seekers", isAllowed: and(normalAuth(), excludeCivic("Warrior Culture", "Shared Burdens", "Slaver Guilds"))},
+	{name: "Police State", isAllowed: normalAuth()},
+	{name: "Shadow Council", isAllowed: auth("Democratic", "Oligarchy", "Dictatorial")},
+	{name: "Aristocratic Elite", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Technocracy"))},
+	{name: "Beacon of Libery", isAllowed: auth("Democratic")},
+	{name: "Citizen Service", isAllowed: and(auth("Democratic", "Oligarchy"), excludeCivic("Reanimators"))},
+	{name: "Death Cult", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
+	{name: "Distinquished Admiralty", isAllowed: normalAuth()},
+	{name: "Exalted Priesthood", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Aristocratic Elite", "Merchant Guilds", "Technocracy"))},
+	{name: "Feudal Society", isAllowed: auth("Imperial")},
+	{name: "Free Haven", isAllowed: and(normalAuth(), excludeCivic("Corvee System"))},
+	{name: "Idyllic Bloom", isAllowed: auth("Imperial")},
+	{name: "Imperial Cult", isAllowed: normalAuth()},
+	{name: "Inward Perfection", isAllowed: and(normalAuth(), excludeCivic("Pompous Purists"))},
+	{name: "Meritocracy", isAllowed: auth("Democratic", "Oligarchy")},
+	{name: "Nationalistic Zeal", isAllowed: normalAuth()},
+	{name: "Parliamentary System", isAllowed: auth("Democratic")},
+	{name: "Pompous Purists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
+	{name: "Shared Burdens", isAllowed: and(normalAuth(), excludeCivic("Technocracy", "Pleasure Seekers"))},
+	{name: "Slaver Guilds", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"))},
+	{name: "Technocracy", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Aristocratic Elite", "Shared Burdens"))},
+	{name: "Warrior Culture", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"))},
+	//here we have the civics with a slight edit to their requirements, because their ethics are very strict
+	{name: "Idealistic Foundation", isAllowed: auth("Democratic", "Oligarchy")},
+	{name: "Reanimators", isAllowed: and(normalAuth(), excludeCivic("Citizen Service"))},
+	{name: "Agrarian Idyll", isAllowed: and(normalAuth(), excludeCivic("Anglers"))},
+	{name: "Barbaric Despoilers", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"))},
+	{name: "Fanatic Purifiers", isAllowed: and(normalAuth(), excludeCivic("Barbaric Despoilers", "Pompous Purists")), genocidal: true},
 }
 
 var allOrigins = []Origin{
@@ -190,10 +235,6 @@ var allOrigins = []Origin{
 	{name: "Slingshot to the Stars", isAllowed: always},
 	{name: "Teachers of the Shroud", isAllowed: and(includeEthic("Spiritualist", "Fanatic Spiritualist"), excludeCivic("Fanatic Purifiers"))},
 	{name: "Imperial Fiefdom", isAllowed: excludeCivic("Inward Perfection", "Fanatic Purifiers", "Devouring Swarm", "Terravore", "Driven Assimilator", "Determined Exterminator")},
-}
-
-func normalAuth() Predicate {
-	return auth("Democratic", "Oligarchy", "Dictatorial", "Imperial")
 }
 
 func auth(s ...string) Predicate {

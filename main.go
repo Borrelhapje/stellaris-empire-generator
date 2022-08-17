@@ -119,6 +119,54 @@ func chooseHomeplanet(empire Empire) Empire {
 	return empire
 }
 
+func generateSpecies(empire Empire) Species {
+	species := Species{}
+	if empire.authority == "Machine Intelligence" {
+		//generate machine species
+		species.popType = "Machine"
+		species.initialTraitPoints = 1
+	} else if empire.origin.name == "Calamitous Birth" {
+		//generate lithoid species
+		species.popType = "Lithoid"
+		species.initialTraitPoints = 2
+	} else if empire.origin.name == "Ocean Paradise" {
+		//aquatic species, forced aqautic trait
+		species.popType = "Aquatic"
+		species.traits = append(species.traits, Trait{name: "Aquatic", cost: 1})
+		species.initialTraitPoints = 2
+	} else {
+		//standard species
+		popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid"}
+		species.popType = popTypes[r.Intn(len(popTypes))]
+		species.initialTraitPoints = 2
+	}
+	return fillSpecies(species)
+}
+
+func fillSpecies(s Species) Species {
+	for len(s.traits) < 5 {
+		filteredTraits := []Trait{}
+		for _, trait := range allTraits {
+			if trait.isAllowed(s) {
+				filteredTraits = append(filteredTraits, trait)
+			}
+		}
+		s.traits = append(s.traits, filteredTraits[r.Intn(len(filteredTraits))])
+	}
+	if s.availablePoints() > 0 {
+		// try to replace a trait with one costing one more
+	}
+	return s
+}
+
+func (s Species) availablePoints() int {
+	res := s.initialTraitPoints
+	for _, trait := range s.traits {
+		res += trait.cost
+	}
+	return res
+}
+
 type Empire struct {
 	authority   string
 	civics      []Civic
@@ -153,8 +201,17 @@ type Authority struct {
 }
 
 type Species struct {
-	popType string
-	traits  []string
+	popType            string
+	initialTraitPoints int
+	traits             []Trait
+}
+
+type speciesPredicate func(s Species) bool
+
+type Trait struct {
+	cost      int
+	name      string
+	isAllowed speciesPredicate
 }
 
 func always(empire Empire) bool {
@@ -314,6 +371,14 @@ var allOrigins = []Origin{
 	{name: "Slingshot to the Stars", isAllowed: always},
 	{name: "Teachers of the Shroud", isAllowed: and(includeEthic("Spiritualist", "Fanatic Spiritualist"), excludeCivic("Fanatic Purifiers"))},
 	{name: "Imperial Fiefdom", isAllowed: excludeCivic("Inward Perfection", "Fanatic Purifiers", "Devouring Swarm", "Terravore", "Driven Assimilator", "Determined Exterminator")},
+}
+
+var allTraits = []Trait{
+	{name: "Aquatic", cost: 1, isAllowed: True},
+	{name: "Agrarian", cost: 2, isAllowed: True}, 
+	{name: "Ingenious", cost: 2},
+	{name: "Industrious", cost:2 },
+	{name: ""}
 }
 
 func auth(s ...string) Predicate {

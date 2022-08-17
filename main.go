@@ -142,6 +142,24 @@ var allCivics = []Civic{
 	{name: "Strength of Legions", isAllowed: auth("Hive Mind")},
 	{name: "Subspacce Ephase", isAllowed: auth("Hive Mind")},
 	{name: "Subusmed Will", isAllowed: auth("Hive Mind")},
+	{name: "Brand Loyalty", isAllowed: auth("Corporate")},
+	{name: "Catalytic Recyclers", isAllowed: auth("Corporate")},
+	{name: "Corporate Hedonism", isAllowed: and(auth("Corporate"), excludeCivic("Indentured Assets"))},
+	{name: "Criminal Heritage", isAllowed: auth("Corporate")},
+	{name: "Franchising", isAllowed: auth("Corporate")},
+	{name: "Free Traders", isAllowed: auth("Corporate")},
+	{name: "Mastercraft Inc.", isAllowed: auth("Corporate")},
+	{name: "Media Conglomerate", isAllowed: auth("Corporate")},
+	{name: "Permanent Employment", isAllowed: and(auth("Corporate"))},
+	{name: "Private Prospectors", isAllowed: auth("Corporate")},
+	{name: "Public Relations Specialists", isAllowed: auth("Corporate")},
+	{name: "Ruthless Competition", isAllowed: auth("Corporate")},
+	{name: "Trading Posts", isAllowed: auth("Corporate")},
+	{name: "Corporate Death Cult", isAllowed: auth("Corporate")},
+	{name: "Gospel of the Masses", isAllowed: auth("Corporate")},
+	{name: "Indentured Assets", isAllowed: and(auth("Corporate"), excludeCivic("Corporate Hedonism"))},
+	{name: "Naval Contractors", isAllowed: auth("Corporate")},
+	{name: "Private Military Companies", isAllowed: auth("Corporate")},
 }
 
 var allOrigins = []Origin{
@@ -157,7 +175,7 @@ var allOrigins = []Origin{
 	{name: "Galactic Doorstep", isAllowed: always},
 	{name: "Tree of Life", isAllowed: and(auth("Hive Mind"), excludeCivic("Devouring Swarm", "Terravore"))},
 	{name: "On the Shoulders of Giants", isAllowed: excludeEthic("Gestalt Consciousness")},
-	{name: "Calamitous Birth", isAllowed: excludeCivic("Catalytic Processing", "Organic Reprocessing", "Catalytic Recyclerss")},
+	{name: "Calamitous Birth", isAllowed: excludeCivic("Catalytic Processing", "Organic Reprocessing", "Catalytic Recyclers")},
 	{name: "Resource Consolidation", isAllowed: and(auth("Machine Intelligence"), excludeCivic("Rogue Servitor", "Organic Reprocessing"))},
 	{name: "Common Ground", isAllowed: and(excludeEthic("Gestalt Consciousness", "Xenophobe", "Fanatic Xenophobe"), excludeCivic("Barbaric Despoilers", "Fanatic Purifiers", "Inward Perfection"))},
 	{name: "Hegemon", isAllowed: and(excludeEthic("Gestalt Consciousness", "Xenophobe", "Fanatic Xenophobe", "Egalitarian", "Fanatic Egalitarian"), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
@@ -172,6 +190,10 @@ var allOrigins = []Origin{
 	{name: "Slingshot to the Stars", isAllowed: always},
 	{name: "Teachers of the Shroud", isAllowed: and(includeEthic("Spiritualist", "Fanatic Spiritualist"), excludeCivic("Fanatic Purifiers"))},
 	{name: "Imperial Fiefdom", isAllowed: excludeCivic("Inward Perfection", "Fanatic Purifiers", "Devouring Swarm", "Terravore", "Driven Assimilator", "Determined Exterminator")},
+}
+
+func normalAuth() Predicate {
+	return auth("Democratic", "Oligarchy", "Dictatorial", "Imperial")
 }
 
 func auth(s ...string) Predicate {

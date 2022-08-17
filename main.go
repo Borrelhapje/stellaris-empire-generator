@@ -12,19 +12,23 @@ var r = rand.New(rand.NewSource(seed))
 func main() {
 	fmt.Println("Seed is " + fmt.Sprint(seed))
 	empire := Empire{}
+	empire = chooseEthic(empire)
 	empire = chooseAuthority(empire)
 	empire = chooseCivic(empire)
 	empire = chooseCivic(empire)
-	for i := 0; i < 3; i++ {
-		empire = chooseEthic(empire)
-	}
+
 	empire = chooseOrigin(empire)
 	fmt.Println(empire)
 }
 
 func chooseAuthority(empire Empire) Empire {
-	var authorities = []string{"Democratic", "Oligarchy", "Dictatorial", "Imperial", "Hive Mind", "Machine Intelligence", "Corporate"}
-	empire.authority = authorities[r.Intn(len(authorities))]
+	result := []Authority{}
+	for _, auth := range allAuthorities {
+		if auth.isAllowed(empire) {
+			result = append(result, auth)
+		}
+	}
+	empire.authority = result[r.Intn(len(result))].name
 	return empire
 }
 
@@ -35,7 +39,6 @@ func chooseCivic(empire Empire) Empire {
 }
 
 func getCivicList(empire Empire) []Civic {
-	allCivics := []Civic{}
 	result := []Civic{}
 	for _, civic := range allCivics {
 		if civic.isAllowed(empire) {
@@ -46,13 +49,30 @@ func getCivicList(empire Empire) []Civic {
 }
 
 func chooseEthic(empire Empire) Empire {
+	firstFanatic := r.Intn(2) == 1
 	ethicList := getEthicList(empire)
-	empire.ethics = append(empire.ethics, ethicList[r.Intn(len(ethicList))])
+	firstDraw := ethicList[r.Intn(len(ethicList))]
+	if firstDraw.name == "Gestalt Consciousness" {
+		empire.ethics = []Ethic{firstDraw}
+		return empire
+	}
+	if firstFanatic {
+		empire.ethics = append(empire.ethics, Ethic{name: "Fanatic " + firstDraw.name, isAllowed: firstDraw.isAllowed})
+		ethicList := getEthicList(empire)
+		nextDraw := ethicList[r.Intn(len(ethicList))]
+		empire.ethics = append(empire.ethics, nextDraw)
+	} else {
+		empire.ethics = append(empire.ethics, firstDraw)
+		for i := 0; i < 2; i++ {
+			ethicList := getEthicList(empire)
+			nextDraw := ethicList[r.Intn(len(ethicList))]
+			empire.ethics = append(empire.ethics, nextDraw)
+		}
+	}
 	return empire
 }
 
 func getEthicList(empire Empire) []Ethic {
-	allEthics := []Ethic{}
 	result := []Ethic{}
 	for _, ethic := range allEthics {
 		if ethic.isAllowed(empire) {
@@ -101,6 +121,11 @@ type Origin struct {
 	isAllowed Predicate // checks if valid for civics, authority and ethics
 }
 
+type Authority struct {
+	name      string
+	isAllowed Predicate
+}
+
 type Species struct {
 	popType string
 	traits  []string
@@ -112,6 +137,34 @@ func always(empire Empire) bool {
 
 func normalAuth() Predicate {
 	return auth("Democratic", "Oligarchy", "Dictatorial", "Imperial")
+}
+
+func onlyGestalt(empire Empire) bool {
+	return len(empire.ethics) == 0
+}
+
+var allEthics = []Ethic{
+	{name: "Authoritarian", isAllowed: excludeEthic("Egalitarian", "Gestalt Consciousness")},
+	{name: "Spiritualist", isAllowed: excludeEthic("Materialist", "Gestalt Consciousness")},
+	{name: "Militarist", isAllowed: excludeEthic("Pacifist", "Gestalt Consciousness")},
+	{name: "Xenophobe", isAllowed: excludeEthic("Xenophile", "Gestalt Consciousness")},
+	{name: "Egalitarian", isAllowed: excludeEthic("Authoritarian", "Gestalt Consciousness")},
+	{name: "Materialist", isAllowed: excludeEthic("Materialist", "Gestalt Consciousness")},
+	{name: "Pacifist", isAllowed: excludeEthic("Militarist", "Gestalt Consciousness")},
+	{name: "Xenophile", isAllowed: excludeEthic("Xenophobe", "Gestalt Consciousness")},
+	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
+	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
+	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
+}
+
+var allAuthorities = []Authority{
+	{name: "Democratic", isAllowed: excludeEthic("Authoritarian", "Fanatic Authoritarian", "Gestalt Consciousness")},
+	{name: "Oligarchy", isAllowed: excludeEthic("Fanatic Authoritarian", "Fanatic Egalitarian", "Gestalt Consciousness")},
+	{name: "Dictatorial", isAllowed: excludeEthic("Egalitarian", "Fanatic Egalitarian", "Gestalt Consciousness")},
+	{name: "Imperial", isAllowed: excludeEthic("Egalitarian", "Fanatic Egalitarian", "Gestalt Consciousness")},
+	{name: "Corporate", isAllowed: excludeEthic("Fanatic Egalitarian", "Fanatic Authoritarian", "Gestalt Consciousness")},
+	{name: "Hive Mind", isAllowed: includeEthic("Gestalt Consciousness")},
+	{name: "Machine Intelligence", isAllowed: includeEthic("Gestalt Consciousness")},
 }
 
 var allCivics = []Civic{

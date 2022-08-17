@@ -54,8 +54,14 @@ func chooseCivic(empire Empire) Empire {
 
 func getCivicList(empire Empire) []Civic {
 	result := []Civic{}
+outer:
 	for _, civic := range allCivics {
 		if civic.isAllowed(empire) {
+			for _, existing := range empire.civics {
+				if existing.name == civic.name {
+					continue outer
+				}
+			}
 			result = append(result, civic)
 		}
 	}
@@ -374,11 +380,11 @@ var allOrigins = []Origin{
 }
 
 var allTraits = []Trait{
-	{name: "Aquatic", cost: 1, isAllowed: True},
-	{name: "Agrarian", cost: 2, isAllowed: True}, 
+	{name: "Aquatic", cost: 1},
+	{name: "Agrarian", cost: 2},
 	{name: "Ingenious", cost: 2},
-	{name: "Industrious", cost:2 },
-	{name: ""}
+	{name: "Industrious", cost: 2},
+	{name: ""},
 }
 
 func auth(s ...string) Predicate {

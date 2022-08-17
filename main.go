@@ -128,6 +128,20 @@ var allCivics = []Civic{
 	{name: "Unitary Cohesion", isAllowed: auth("Machine Intelligence")},
 	{name: "Warbots", isAllowed: auth("Machine Intelligence")},
 	{name: "Zero-Waste Protocols", isAllowed: auth("Machine Intelligence")},
+	{name: "Ascetic", isAllowed: auth("Hive Mind")},
+	{name: "Devouring Swarm", isAllowed: and(auth("Hive Mind"), excludeCivic("Terravore")), genocidal: true},
+	{name: "Terravore", isAllowed: and(auth("Hive Mind"), excludeCivic("Devouring Swarm")), genocidal: true},
+	{name: "Divided Attention", isAllowed: auth("Hive Mind")},
+	{name: "Empath", isAllowed: auth("Hive Mind")},
+	{name: "Idyllic Bloom", isAllowed: auth("Hive Mind")},
+	{name: "Memorialist", isAllowed: auth("Hive Mind")},
+	{name: "Natural NeuralNetwork", isAllowed: auth("Hive Mind")},
+	{name: "One Mind", isAllowed: auth("Hive Mind")},
+	{name: "Organic Reprocessing", isAllowed: auth("Hive Mind")},
+	{name: "Pooled Knowledge", isAllowed: auth("Hive Mind")},
+	{name: "Strength of Legions", isAllowed: auth("Hive Mind")},
+	{name: "Subspacce Ephase", isAllowed: auth("Hive Mind")},
+	{name: "Subusmed Will", isAllowed: auth("Hive Mind")},
 }
 
 var allOrigins = []Origin{

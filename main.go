@@ -16,9 +16,23 @@ func main() {
 	empire = chooseAuthority(empire)
 	empire = chooseCivic(empire)
 	empire = chooseCivic(empire)
-
 	empire = chooseOrigin(empire)
+	empire = chooseHomeplanet(empire)
 	fmt.Println(empire)
+}
+
+func (e Empire) String() string {
+	res := e.authority + "\nEthics: "
+	for _, ethic := range e.ethics {
+		res += ethic.name + " "
+	}
+	res += "\nCivics: "
+	for _, civic := range e.civics {
+		res += civic.name + " "
+	}
+	res += "\nOrigin: " + e.origin.name
+	res += "\nPlanet: " + e.homeplanet
+	return res
 }
 
 func chooseAuthority(empire Empire) Empire {
@@ -96,6 +110,12 @@ func chooseOrigin(empire Empire) Empire {
 		}
 	}
 	empire.origin = result[r.Intn(len(result))]
+	return empire
+}
+
+func chooseHomeplanet(empire Empire) Empire {
+	planets := []string{"Desert", "Arid", "Savanna", "Ocean", "Continental", "Tropical", "Arctic", "Alpine", "Tundra"}
+	empire.homeplanet = planets[r.Intn(len(planets))]
 	return empire
 }
 
@@ -274,7 +294,7 @@ var allOrigins = []Origin{
 	{name: "Post-Apocalyptic", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Agrarian Idyll", "Anglers"))},
 	{name: "Remnants", isAllowed: excludeCivic("Agrarian Idyll")},
 	{name: "Shattered Ring", isAllowed: excludeCivic("Agrarian Idyll", "Anglers")},
-	{name: "Void Dwellers", isAllowed: and(excludeEthic("Machine Intelligence"), excludeCivic("Idyllic Bloom", "Agrarian Idyll", "Anglers"))},
+	{name: "Void Dwellers", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Idyllic Bloom", "Agrarian Idyll", "Anglers"))},
 	{name: "Scion", isAllowed: and(excludeEthic("Gestalt Consciousness", "Fanatic Xenophobe"), excludeCivic("Pompous Purists"))},
 	{name: "Galactic Doorstep", isAllowed: always},
 	{name: "Tree of Life", isAllowed: and(auth("Hive Mind"), excludeCivic("Devouring Swarm", "Terravore"))},
@@ -365,16 +385,5 @@ func and(s ...Predicate) Predicate {
 			}
 		}
 		return true
-	}
-}
-
-func or(s ...Predicate) Predicate {
-	return func(empire Empire) bool {
-		for _, pred := range s {
-			if pred(empire) {
-				return true
-			}
-		}
-		return false
 	}
 }

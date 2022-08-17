@@ -74,8 +74,14 @@ func chooseEthic(empire Empire) Empire {
 
 func getEthicList(empire Empire) []Ethic {
 	result := []Ethic{}
+outer:
 	for _, ethic := range allEthics {
 		if ethic.isAllowed(empire) {
+			for _, existing := range empire.ethics {
+				if existing.name == ethic.name || existing.name == "Fanatic "+ethic.name {
+					continue outer
+				}
+			}
 			result = append(result, ethic)
 		}
 	}
@@ -144,14 +150,14 @@ func onlyGestalt(empire Empire) bool {
 }
 
 var allEthics = []Ethic{
-	{name: "Authoritarian", isAllowed: excludeEthic("Egalitarian", "Gestalt Consciousness")},
-	{name: "Spiritualist", isAllowed: excludeEthic("Materialist", "Gestalt Consciousness")},
-	{name: "Militarist", isAllowed: excludeEthic("Pacifist", "Gestalt Consciousness")},
-	{name: "Xenophobe", isAllowed: excludeEthic("Xenophile", "Gestalt Consciousness")},
-	{name: "Egalitarian", isAllowed: excludeEthic("Authoritarian", "Gestalt Consciousness")},
-	{name: "Materialist", isAllowed: excludeEthic("Materialist", "Gestalt Consciousness")},
-	{name: "Pacifist", isAllowed: excludeEthic("Militarist", "Gestalt Consciousness")},
-	{name: "Xenophile", isAllowed: excludeEthic("Xenophobe", "Gestalt Consciousness")},
+	{name: "Authoritarian", isAllowed: excludeEthic("Egalitarian", "Fanatic Egalitarian", "Gestalt Consciousness")},
+	{name: "Spiritualist", isAllowed: excludeEthic("Materialist", "Fanatic Materialist", "Gestalt Consciousness")},
+	{name: "Militarist", isAllowed: excludeEthic("Pacifist", "Fanatic Pacifist", "Gestalt Consciousness")},
+	{name: "Xenophobe", isAllowed: excludeEthic("Xenophile", "Fanatic Xenophile", "Gestalt Consciousness")},
+	{name: "Egalitarian", isAllowed: excludeEthic("Authoritarian", "Fanatic Authoritarian", "Gestalt Consciousness")},
+	{name: "Materialist", isAllowed: excludeEthic("Spiritualist", "Fanatic Spiritualist", "Gestalt Consciousness")},
+	{name: "Pacifist", isAllowed: excludeEthic("Militarist", "Fanatic Militarist", "Gestalt Consciousness")},
+	{name: "Xenophile", isAllowed: excludeEthic("Xenophobe", "Fanatic Xenophobe", "Gestalt Consciousness")},
 	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
 	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
 	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
@@ -207,19 +213,19 @@ var allCivics = []Civic{
 	{name: "Free Traders", isAllowed: auth("Corporate")},
 	{name: "Mastercraft Inc.", isAllowed: auth("Corporate")},
 	{name: "Media Conglomerate", isAllowed: auth("Corporate")},
-	{name: "Permanent Employment", isAllowed: and(auth("Corporate"))},
+	{name: "Permanent Employment", isAllowed: and(auth("Corporate"), excludeEthic("Egalitarian", "Fanatic Egalitarian"))},
 	{name: "Private Prospectors", isAllowed: auth("Corporate")},
 	{name: "Public Relations Specialists", isAllowed: auth("Corporate")},
 	{name: "Ruthless Competition", isAllowed: auth("Corporate")},
 	{name: "Trading Posts", isAllowed: auth("Corporate")},
-	{name: "Corporate Death Cult", isAllowed: auth("Corporate")},
-	{name: "Gospel of the Masses", isAllowed: auth("Corporate")},
-	{name: "Indentured Assets", isAllowed: and(auth("Corporate"), excludeCivic("Corporate Hedonism"))},
-	{name: "Naval Contractors", isAllowed: auth("Corporate")},
-	{name: "Private Military Companies", isAllowed: auth("Corporate")},
+	{name: "Corporate Death Cult", isAllowed: and(auth("Corporate"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
+	{name: "Gospel of the Masses", isAllowed: and(auth("Corporate"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
+	{name: "Indentured Assets", isAllowed: and(auth("Corporate"), excludeCivic("Corporate Hedonism"), includeEthic("Authoritarian", "Fanatic Authoritarian"))},
+	{name: "Naval Contractors", isAllowed: and(auth("Corporate"), includeEthic("Militarist", "Fanatic Militarist"))},
+	{name: "Private Military Companies", isAllowed: and(auth("Corporate"), includeEthic("Militarist", "Fanatic Militarist"))},
 	{name: "Anglers", isAllowed: and(normalAuth(), excludeCivic("Agrarian Idyll"))},
-	{name: "Byzantine Bureaucracy", isAllowed: normalAuth()},
-	{name: "Corvee System", isAllowed: and(normalAuth(), excludeCivic("Free Haven"))},
+	{name: "Byzantine Bureaucracy", isAllowed: and(normalAuth(), excludeEthic("Spiritualist", "Fanatic Spiritualist"))},
+	{name: "Corvee System", isAllowed: and(normalAuth(), excludeCivic("Free Haven"), excludeEthic("Egalitarian", "Fanatic Egalitarian"))},
 	{name: "Cutthroat Politics", isAllowed: normalAuth()},
 	{name: "Diplomatic Corps", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
 	{name: "Efficient Bureaucracy", isAllowed: normalAuth()},
@@ -231,33 +237,33 @@ var allCivics = []Civic{
 	{name: "Mining Guilds", isAllowed: normalAuth()},
 	{name: "Philosopher King", isAllowed: auth("Dictatorial", "Imperial")},
 	{name: "Pleasure Seekers", isAllowed: and(normalAuth(), excludeCivic("Warrior Culture", "Shared Burdens", "Slaver Guilds"))},
-	{name: "Police State", isAllowed: normalAuth()},
+	{name: "Police State", isAllowed: and(normalAuth(), excludeEthic("Fanatic Egalitarian"))},
 	{name: "Shadow Council", isAllowed: auth("Democratic", "Oligarchy", "Dictatorial")},
-	{name: "Aristocratic Elite", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Technocracy"))},
-	{name: "Beacon of Libery", isAllowed: auth("Democratic")},
-	{name: "Citizen Service", isAllowed: and(auth("Democratic", "Oligarchy"), excludeCivic("Reanimators"))},
-	{name: "Death Cult", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
-	{name: "Distinquished Admiralty", isAllowed: normalAuth()},
-	{name: "Exalted Priesthood", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Aristocratic Elite", "Merchant Guilds", "Technocracy"))},
+	{name: "Aristocratic Elite", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Technocracy"), excludeEthic("Egalitarian", "Fanatic Egalitarian"))},
+	{name: "Beacon of Libery", isAllowed: and(auth("Democratic"), includeEthic("Egalitarian", "Fanatic Egalitarian"), excludeEthic("Xenophobe", "Fanatic Xenophobe"))},
+	{name: "Citizen Service", isAllowed: and(auth("Democratic", "Oligarchy"), excludeCivic("Reanimators"), includeEthic("Militarist", "Fanatic Militarist"), excludeEthic("Fanatic Xenophile"))},
+	{name: "Death Cult", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
+	{name: "Distinquished Admiralty", isAllowed: and(normalAuth(), includeEthic("Militarist", "Fanatic Militarist"))},
+	{name: "Exalted Priesthood", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Aristocratic Elite", "Merchant Guilds", "Technocracy"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
 	{name: "Feudal Society", isAllowed: auth("Imperial")},
-	{name: "Free Haven", isAllowed: and(normalAuth(), excludeCivic("Corvee System"))},
-	{name: "Idyllic Bloom", isAllowed: auth("Imperial")},
-	{name: "Imperial Cult", isAllowed: normalAuth()},
-	{name: "Inward Perfection", isAllowed: and(normalAuth(), excludeCivic("Pompous Purists"))},
+	{name: "Free Haven", isAllowed: and(normalAuth(), excludeCivic("Corvee System"), includeEthic("Xenophile", "Fanatic Xenophile"))},
+	{name: "Idyllic Bloom", isAllowed: normalAuth()},
+	{name: "Imperial Cult", isAllowed: and(auth("Imperial"), includeEthic("Spiritualist", "Fanatic Spiritualist"), includeEthic("Authoritarian", "Fanatic Authoritarian"))},
+	{name: "Inward Perfection", isAllowed: and(normalAuth(), excludeCivic("Pompous Purists"), includeEthic("Pacifist", "Fanatic Pacifist"), includeEthic("Xenophobe", "Fanatic Xenophobe"))},
 	{name: "Meritocracy", isAllowed: auth("Democratic", "Oligarchy")},
-	{name: "Nationalistic Zeal", isAllowed: normalAuth()},
+	{name: "Nationalistic Zeal", isAllowed: and(normalAuth(), includeEthic("Militarist", "Fanatic Militarist"))},
 	{name: "Parliamentary System", isAllowed: auth("Democratic")},
-	{name: "Pompous Purists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
-	{name: "Shared Burdens", isAllowed: and(normalAuth(), excludeCivic("Technocracy", "Pleasure Seekers"))},
-	{name: "Slaver Guilds", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"))},
-	{name: "Technocracy", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Aristocratic Elite", "Shared Burdens"))},
-	{name: "Warrior Culture", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"))},
+	{name: "Pompous Purists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"), includeEthic("Xenophobe", "Fanatic Xenophobe"))},
+	{name: "Shared Burdens", isAllowed: and(normalAuth(), excludeCivic("Technocracy", "Pleasure Seekers"), includeEthic("Fanatic Egalitarian"), excludeEthic("Xenophobe"))},
+	{name: "Slaver Guilds", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"), includeEthic("Authoritarian", "Fanatic Authoritarian"))},
+	{name: "Technocracy", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Aristocratic Elite", "Shared Burdens"), includeEthic("Materialist", "Fanatic Materialist"))},
+	{name: "Warrior Culture", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"), includeEthic("Militarist", "Fanatic Militarist"))},
 	//here we have the civics with a slight edit to their requirements, because their ethics are very strict
-	{name: "Idealistic Foundation", isAllowed: auth("Democratic", "Oligarchy")},
-	{name: "Reanimators", isAllowed: and(normalAuth(), excludeCivic("Citizen Service"))},
-	{name: "Agrarian Idyll", isAllowed: and(normalAuth(), excludeCivic("Anglers"))},
-	{name: "Barbaric Despoilers", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"))},
-	{name: "Fanatic Purifiers", isAllowed: and(normalAuth(), excludeCivic("Barbaric Despoilers", "Pompous Purists")), genocidal: true},
+	{name: "Idealistic Foundation", isAllowed: and(normalAuth(), includeEthic("Egalitarian", "Fanatic Egalitarian"))},
+	{name: "Reanimators", isAllowed: and(normalAuth(), excludeCivic("Citizen Service"), excludeEthic("Pacifist", "Fanatic Pacifist"))},
+	{name: "Agrarian Idyll", isAllowed: and(normalAuth(), excludeCivic("Anglers"), includeEthic("Pacifist", "Fanatic Pacifist"))},
+	{name: "Barbaric Despoilers", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"), includeEthic("Militarist", "Fanatic Militarist"), includeEthic("Authoritarian", "Fanatic Authoritarian", "Xenophobe", "Fanatic Xenophobe"), excludeEthic("Xenophile", "Fanatic Xenophile"))},
+	{name: "Fanatic Purifiers", isAllowed: and(normalAuth(), excludeCivic("Barbaric Despoilers", "Pompous Purists"), includeEthic("Fanatic Xenophobe"), includeEthic("Militarist", "Spiritualist")), genocidal: true},
 }
 
 var allOrigins = []Origin{

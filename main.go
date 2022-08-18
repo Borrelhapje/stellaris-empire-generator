@@ -428,7 +428,7 @@ var allOrigins = []Origin{
 	{name: "Post-Apocalyptic", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Agrarian Idyll", "Anglers"))},
 	{name: "Remnants", isAllowed: excludeCivic("Agrarian Idyll")},
 	{name: "Shattered Ring", isAllowed: excludeCivic("Agrarian Idyll", "Anglers")},
-	{name: "Void Dwellers", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Idyllic Bloom", "Agrarian Idyll", "Anglers"))},
+	{name: "Void Dwellers", isAllowed: and(excludeEthic("Gestalt Consciousness"), excludeCivic("Idyllic Bloom", "Agrarian Idyll", "Anglers"))},
 	{name: "Scion", isAllowed: and(excludeEthic("Gestalt Consciousness", "Fanatic Xenophobe"), excludeCivic("Pompous Purists"))},
 	{name: "Galactic Doorstep", isAllowed: always},
 	{name: "Tree of Life", isAllowed: and(auth("Hive Mind"), excludeCivic("Devouring Swarm", "Terravore"))},

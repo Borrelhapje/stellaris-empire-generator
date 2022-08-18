@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"net/http"
 	"time"
+
+	"github.com/maxence-charriere/go-app/v9/pkg/app"
 )
 
 var seed = time.Now().UnixNano()
@@ -11,14 +15,60 @@ var r = rand.New(rand.NewSource(seed))
 
 func main() {
 	fmt.Println("Seed is " + fmt.Sprint(seed))
-	empire := Empire{}
-	empire = chooseEthic(empire)
-	empire = chooseAuthority(empire)
-	empire = chooseCivic(empire)
-	empire = chooseCivic(empire)
-	empire = chooseOrigin(empire)
-	empire = chooseHomeplanet(empire)
-	fmt.Println(empire)
+	app.Route("/", &data{})
+	app.RunWhenOnBrowser()
+
+	http.Handle("/", &app.Handler{
+		Name:        "Stellaris",
+		Description: "A Stellaris Empire Generator",
+	})
+
+	if err := http.ListenAndServe(":8000", nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (d *data) Render() app.UI {
+	return app.Div().Body(
+		app.Button().Text("Generate").OnClick(d.generateEmpire),
+		app.Range(d.Empires).Slice(func(i int) app.UI {
+			return app.Div().Body(
+				app.Label().Text("Authority:").For("authority"),
+				app.Span().ID("authority").Text(d.Empires[i].authority),
+				app.Br(),
+				app.Label().Text("Ethics:").For("ethics"),
+				app.Span().ID("ethics").Text(d.Empires[i].ethics),
+				app.Br(),
+				app.Label().Text("Civics:").For("civics"),
+				app.Span().ID("civics").Text(d.Empires[i].civics),
+				app.Br(),
+				app.Label().Text("Origin:").For("origin"),
+				app.Span().ID("origin").Text(d.Empires[i].origin.name),
+				app.Br(),
+				app.Label().Text("Planet Class:").For("planet"),
+				app.Span().ID("planet").Text(d.Empires[i].homeplanet),
+			)
+		}),
+	)
+}
+
+type data struct {
+	app.Compo
+	Empires []Empire
+}
+
+func (d *data) generateEmpire(ctx app.Context, e app.Event) {
+	d.Empires = []Empire{}
+	for i := 0; i < 3; i++ {
+		empire := Empire{}
+		empire = chooseEthic(empire)
+		empire = chooseAuthority(empire)
+		empire = chooseCivic(empire)
+		empire = chooseCivic(empire)
+		empire = chooseOrigin(empire)
+		empire = chooseHomeplanet(empire)
+		d.Empires = append(d.Empires, empire)
+	}
 }
 
 func (e Empire) String() string {
@@ -184,6 +234,22 @@ type Empire struct {
 }
 
 type Predicate func(empire Empire) bool
+
+func (e Civic) String() string {
+	return e.name
+}
+
+func (e Ethic) String() string {
+	return e.name
+}
+
+func (e Origin) String() string {
+	return e.name
+}
+
+func (e Authority) String() string {
+	return e.name
+}
 
 type Civic struct {
 	name      string

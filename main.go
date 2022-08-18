@@ -362,7 +362,7 @@ var allOrigins = []Origin{
 	{name: "Galactic Doorstep", isAllowed: always},
 	{name: "Tree of Life", isAllowed: and(auth("Hive Mind"), excludeCivic("Devouring Swarm", "Terravore"))},
 	{name: "On the Shoulders of Giants", isAllowed: excludeEthic("Gestalt Consciousness")},
-	{name: "Calamitous Birth", isAllowed: excludeCivic("Catalytic Processing", "Organic Reprocessing", "Catalytic Recyclers")},
+	{name: "Calamitous Birth", isAllowed: and(excludeCivic("Catalytic Processing", "Organic Reprocessing", "Catalytic Recyclers"), notAuth("Machine Intelligence"))},
 	{name: "Resource Consolidation", isAllowed: and(auth("Machine Intelligence"), excludeCivic("Rogue Servitor", "Organic Reprocessing"))},
 	{name: "Common Ground", isAllowed: and(excludeEthic("Gestalt Consciousness", "Xenophobe", "Fanatic Xenophobe"), excludeCivic("Barbaric Despoilers", "Fanatic Purifiers", "Inward Perfection"))},
 	{name: "Hegemon", isAllowed: and(excludeEthic("Gestalt Consciousness", "Xenophobe", "Fanatic Xenophobe", "Egalitarian", "Fanatic Egalitarian"), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},

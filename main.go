@@ -21,6 +21,9 @@ func main() {
 	http.Handle("/", &app.Handler{
 		Name:        "Stellaris",
 		Description: "A Stellaris Empire Generator",
+		Styles: []string{
+			"/web/app.css", // Loads hello.css file.
+		},
 	})
 
 	if err := http.ListenAndServe(":8000", nil); err != nil {

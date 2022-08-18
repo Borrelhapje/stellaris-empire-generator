@@ -47,6 +47,8 @@ func (d *data) Render() app.UI {
 				app.Br(),
 				app.Label().Text("Planet Class:").For("planet"),
 				app.Span().ID("planet").Text(d.Empires[i].homeplanet),
+				app.Br(),
+				app.Br(),
 			)
 		}),
 	)

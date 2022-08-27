@@ -34,6 +34,7 @@ func main() {
 func (d *data) Render() app.UI {
 	return app.Div().Body(
 		app.Button().Text("Generate").OnClick(d.generateEmpire),
+		app.Div().Class("horizontal").Body(
 		app.Range(d.Empires).Slice(func(i int) app.UI {
 			return app.Div().Body(
 				app.Label().Text("Authority:").For("authority"),
@@ -75,7 +76,7 @@ func (d *data) Render() app.UI {
 				app.Br(),
 			)
 		}),
-	)
+	))
 }
 
 type data struct {

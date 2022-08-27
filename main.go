@@ -35,48 +35,48 @@ func (d *data) Render() app.UI {
 	return app.Div().Body(
 		app.Button().Text("Generate").OnClick(d.generateEmpire),
 		app.Div().Class("horizontal").Body(
-		app.Range(d.Empires).Slice(func(i int) app.UI {
-			return app.Div().Body(
-				app.Label().Text("Authority:").For("authority"),
-				app.Span().ID("authority").Text(d.Empires[i].authority),
-				app.Br(),
-				app.Label().Text("Ethics:").For("ethics"),
-				app.Span().ID("ethics").Text(d.Empires[i].ethics),
-				app.Br(),
-				app.Label().Text("Civics:").For("civics"),
-				app.Span().ID("civics").Text(d.Empires[i].civics),
-				app.Br(),
-				app.Label().Text("Origin:").For("origin"),
-				app.Span().ID("origin").Text(d.Empires[i].origin.name),
-				app.Br(),
-				app.Label().Text("Planet Class:").For("planet"),
-				app.Span().ID("planet").Text(d.Empires[i].homeplanet),
-				app.Br(),
-				app.Div().Body(
-					app.Span().Text("Main Species:"),
+			app.Range(d.Empires).Slice(func(i int) app.UI {
+				return app.Div().Body(
+					app.Label().Text("Authority:").For("authority"),
+					app.Span().ID("authority").Text(d.Empires[i].authority),
 					app.Br(),
-					app.Label().Text("Type").For("MainType"),
-					app.Span().ID("MainType").Text(d.Empires[i].mainSpecies.popType),
-					app.Ul().Body(app.Range(d.Empires[i].mainSpecies.traits).Slice(func(j int) app.UI {
-						trait := d.Empires[i].mainSpecies.traits[j]
-						return app.Li().Text(trait.name)
-					})),
-					app.If(len(d.Empires[i].subSpecies.traits) > 0, app.Div().Body(
-						app.Span().Text("Sub Species:"),
+					app.Label().Text("Ethics:").For("ethics"),
+					app.Span().ID("ethics").Text(d.Empires[i].ethics),
+					app.Br(),
+					app.Label().Text("Civics:").For("civics"),
+					app.Span().ID("civics").Text(d.Empires[i].civics),
+					app.Br(),
+					app.Label().Text("Origin:").For("origin"),
+					app.Span().ID("origin").Text(d.Empires[i].origin.name),
+					app.Br(),
+					app.Label().Text("Planet Class:").For("planet"),
+					app.Span().ID("planet").Text(d.Empires[i].homeplanet),
+					app.Br(),
+					app.Div().Body(
+						app.Span().Text("Main Species:"),
 						app.Br(),
-						app.Label().Text("Type").For("SubType"),
-						app.Span().ID("SubType").Text(d.Empires[i].subSpecies.popType),
-						app.Ul().Body(app.Range(d.Empires[i].subSpecies.traits).Slice(func(j int) app.UI {
-							trait := d.Empires[i].subSpecies.traits[j]
+						app.Label().Text("Type").For("MainType"),
+						app.Span().ID("MainType").Text(d.Empires[i].mainSpecies.popType),
+						app.Ul().Body(app.Range(d.Empires[i].mainSpecies.traits).Slice(func(j int) app.UI {
+							trait := d.Empires[i].mainSpecies.traits[j]
 							return app.Li().Text(trait.name)
 						})),
-					)),
-				),
-				app.Br(),
-				app.Br(),
-			)
-		}),
-	))
+						app.If(len(d.Empires[i].subSpecies.traits) > 0, app.Div().Body(
+							app.Span().Text("Sub Species:"),
+							app.Br(),
+							app.Label().Text("Type").For("SubType"),
+							app.Span().ID("SubType").Text(d.Empires[i].subSpecies.popType),
+							app.Ul().Body(app.Range(d.Empires[i].subSpecies.traits).Slice(func(j int) app.UI {
+								trait := d.Empires[i].subSpecies.traits[j]
+								return app.Li().Text(trait.name)
+							})),
+						)),
+					),
+					app.Br(),
+					app.Br(),
+				)
+			}),
+		))
 }
 
 type data struct {
@@ -210,6 +210,18 @@ func generateSpecies(empire Empire) Empire {
 	subspecies := Species{
 		initialTraitPoints: 2,
 	}
+	for _, civic := range empire.civics {
+		if civic.name == "Anglers" {
+			species.traits = append(species.traits, originTraits["Aquatic"])
+			subspecies.traits = append(subspecies.traits, originTraits["Aquatic"])
+		}
+		if civic.name == "Idyllic Bloom" {
+			popTypes = []string{"Fungoid", "Plantoid"}
+		}
+		if civic.name == "Terravore" {
+			popTypes = []string{"Lithoid"}
+		}
+	}
 	if empire.authority == "Machine Intelligence" {
 		//generate machine species
 		species.popType = "Machine"
@@ -247,7 +259,7 @@ func generateSpecies(empire Empire) Empire {
 	}
 	empire.mainSpecies = fillSpecies(species, empire.authority == "Hive Mind")
 	if generateSubSpecies {
-		species.popType = popTypes[r.Intn(len(popTypes))]
+		subspecies.popType = popTypes[r.Intn(len(popTypes))]
 		empire.subSpecies = fillSpecies(subspecies, empire.authority == "Hive Mind")
 	}
 	return empire

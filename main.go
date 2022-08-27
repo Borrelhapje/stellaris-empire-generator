@@ -551,7 +551,7 @@ var allTraits = []Trait{
 	{name: "Natural Sociologists", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Natural Engineers", "Natural Physicists", "Serviles"))},
 	{name: "Nomadic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Sedentary"))},
 	{name: "Quick Learners", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Slow Learners"))},
-	{name: "Rapid Breeders", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Slow Breeders", "Clone Soldier"))},
+	{name: "Rapid Breeders", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Slow Breeders", "Clone Soldier", "Lithoid"))},
 	{name: "Resilient", cost: 1, isAllowed: andS(excludeType("Machine"))},
 	{name: "Strong", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Very Strong", "Weak"))},
 	{name: "Very Strong", cost: 3, isAllowed: andS(excludeType("Machine"), excludeTrait("Strong", "Weak"))},

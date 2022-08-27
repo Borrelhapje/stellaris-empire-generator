@@ -286,9 +286,10 @@ type Species struct {
 type speciesPredicate func(s Species) bool
 
 type Trait struct {
-	cost      int
-	name      string
-	isAllowed speciesPredicate
+	cost                int
+	name                string
+	doestNotCountForMax bool
+	isAllowed           speciesPredicate
 }
 
 func always(empire Empire) bool {
@@ -312,7 +313,7 @@ var allEthics = []Ethic{
 	{name: "Materialist", isAllowed: excludeEthic("Spiritualist", "Fanatic Spiritualist", "Gestalt Consciousness")},
 	{name: "Pacifist", isAllowed: excludeEthic("Militarist", "Fanatic Militarist", "Gestalt Consciousness")},
 	{name: "Xenophile", isAllowed: excludeEthic("Xenophobe", "Fanatic Xenophobe", "Gestalt Consciousness")},
-	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
+	// {name: "Gestalt Consciousness", isAllowed: onlyGestalt},
 	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
 	{name: "Gestalt Consciousness", isAllowed: onlyGestalt},
 }
@@ -451,11 +452,81 @@ var allOrigins = []Origin{
 }
 
 var allTraits = []Trait{
-	{name: "Aquatic", cost: 1},
-	{name: "Agrarian", cost: 2},
-	{name: "Ingenious", cost: 2},
-	{name: "Industrious", cost: 2},
-	{name: ""},
+	{name: "Adaptive", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Extremely Adaptive", "Nonadaptive", "Lithoid"))},
+	{name: "Extremely Adaptive", cost: 4, isAllowed: andS(excludeType("Machine"), excludeTrait("Adaptive", "Nonadaptive", "Lithoid"))},
+	{name: "Agrarian", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Lithoid"))},
+	{name: "Aquatic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))},
+	{name: "Charismatic", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Repugnant"))},
+	{name: "Communal", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Solitary"))},
+	{name: "Conformists", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Deviants"))},
+	{name: "Conservationist", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Wasteful"))},
+	{name: "Docile", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Unruly"))},
+	{name: "Enduring", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Fleeting", "Venerable"))},
+	{name: "Venerable", cost: 4, isAllowed: andS(excludeType("Machine"), excludeTrait("Fleeting", "Enduring"))},
+	{name: "Industrious", cost: 2, isAllowed: andS(excludeType("Machine"))},
+	{name: "Ingenious", cost: 2, isAllowed: andS(excludeType("Machine"))},
+	{name: "Intelligent", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Serviles"))},
+	{name: "Natural Engineers", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Natural Physicists", "Natural Sociologists", "Serviles"))},
+	{name: "Natural Physicists", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Natural Engineers", "Natural Sociologists", "Serviles"))},
+	{name: "Natural Sociologists", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Natural Engineers", "Natural Physicists", "Serviles"))},
+	{name: "Nomadic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Sedentary"))},
+	{name: "Quick Learners", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Slow Learners"))},
+	{name: "Rapid Breeders", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Slow Breeders", "Clone Soldier"))},
+	{name: "Resilient", cost: 1, isAllowed: andS(excludeType("Machine"))},
+	{name: "Strong", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Very Strong", "Weak"))},
+	{name: "Very Strong", cost: 3, isAllowed: andS(excludeType("Machine"), excludeTrait("Strong", "Weak"))},
+	{name: "Talented", cost: 1, isAllowed: andS(excludeType("Machine"))},
+	{name: "Thrifty", cost: 2, isAllowed: andS(excludeType("Machine"))},
+	{name: "Traditional", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Quarrelsome"))},
+	{name: "Nonadaptive", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Adaptive", "Extremely Adaptive", "Lithoid"))},
+	{name: "Repugnant", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Charismatic"))},
+	{name: "Solitary", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Communal"))},
+	{name: "Deviants", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Conformists"))},
+	{name: "Wasteful", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Conservationist"))},
+	{name: "Unruly", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Docile"))},
+	{name: "Fleeting", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Enduring", "Venerable"))},
+	{name: "Sedentary", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Nomadic"))},
+	{name: "Slow Learners", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Quick Learners"))},
+	{name: "Slow Breeders", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Rapid Breeders", "Lithoid", "Clone Soldier"))},
+	{name: "Weak", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Strong", "Very Strong"))},
+	{name: "Quarrelsome", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Traditional"))},
+	{name: "Decadent", cost: -1, isAllowed: andS(excludeType("Machine"))},
+	{name: "Phototropic", cost: 1, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Radiotropic", "Cave Dweller"))},
+	{name: "Radiotropic", cost: 2, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Phototropic"))},
+	{name: "Budding", cost: 2, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Slow Breeders", "Rapid Breeders", "Clone Soldier", "Necrophage"))},
+	{name: "Lithoid", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Gaseous Byproducts", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Scintillating Skin", "Volatile Excretions"))},
+	{name: "Scintillating Skin", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Volatile Excretions"))},
+	{name: "Volatile Excretions", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Scintillating Skin"))},
+	{name: "Serviles", cost: 1, isAllowed: never},
+	{name: "Clone Soldier", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Survivor", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Void Dweller", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Necrophage", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Cave Dweller", cost: 0, doestNotCountForMax: true, isAllowed: never},
+	{name: "Double Jointed", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Bulky"))},
+	{name: "Durable", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("High Maintenance"))},
+	{name: "Efficient Processors", cost: 3, isAllowed: andS(includeType("Machine"))},
+	{name: "Emotion Emulators", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Uncanny"))},
+	{name: "Enhanced Memory", cost: 2, isAllowed: andS(includeType("Machine"))},
+	{name: "Logic Engines", cost: 2, isAllowed: andS(includeType("Machine"))},
+	{name: "Mass-Produced", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Custom-Made"))},
+	{name: "Power Drills", cost: 2, isAllowed: andS(includeType("Machine"))},
+	{name: "Recycled", cost: 2, isAllowed: andS(includeType("Machine"), excludeTrait("Luxurious"))},
+	{name: "Streamlined Protocols", cost: 2, isAllowed: andS(includeType("Machine"), excludeTrait("High Bandwith"))},
+	{name: "Superconducive", cost: 2, isAllowed: andS(includeType("Machine"))},
+	{name: "Bulky", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Double Jointed"))},
+	{name: "High Maintenance", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Durable"))},
+	{name: "Uncanny", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Emotion Emulators"))},
+	{name: "Custom-Made", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Mass-Produced"))},
+	{name: "Luxurious", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Recycled"))},
+	{name: "High Bandwith", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Streamlined Protocols"))},
+	{name: "Learning Algorithms", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Repurposed Hardware"))},
+	{name: "Repurposed Hardware", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Learning Algorithms"))},
+}
+
+func never(s Species) bool {
+	return false
 }
 
 func auth(s ...string) Predicate {
@@ -523,6 +594,52 @@ func and(s ...Predicate) Predicate {
 	return func(empire Empire) bool {
 		for _, pred := range s {
 			if !pred(empire) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func excludeTrait(s ...string) speciesPredicate {
+	return func(species Species) bool {
+		for _, trait := range s {
+			for _, sTrait := range species.traits {
+				if trait == sTrait.name {
+					return false
+				}
+			}
+		}
+		return true
+	}
+}
+
+func includeType(s ...string) speciesPredicate {
+	return func(species Species) bool {
+		for _, popType := range s {
+			if species.popType == popType {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func excludeType(s ...string) speciesPredicate {
+	return func(species Species) bool {
+		for _, popType := range s {
+			if species.popType == popType {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func andS(s ...speciesPredicate) speciesPredicate {
+	return func(species Species) bool {
+		for _, pred := range s {
+			if !pred(species) {
 				return false
 			}
 		}

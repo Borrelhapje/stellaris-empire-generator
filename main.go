@@ -72,6 +72,7 @@ func (d *data) generateEmpire(ctx app.Context, e app.Event) {
 		empire = chooseCivic(empire)
 		empire = chooseOrigin(empire)
 		empire = chooseHomeplanet(empire)
+		empire = generateSpecies(empire)
 		d.Empires = append(d.Empires, empire)
 	}
 }
@@ -180,8 +181,10 @@ func chooseHomeplanet(empire Empire) Empire {
 	return empire
 }
 
-func generateSpecies(empire Empire) Species {
+func generateSpecies(empire Empire) Empire {
 	species := Species{}
+	generateSubSpecies := false
+	subspecies := Species{}
 	if empire.authority == "Machine Intelligence" {
 		//generate machine species
 		species.popType = "Machine"
@@ -189,43 +192,78 @@ func generateSpecies(empire Empire) Species {
 	} else if empire.origin.name == "Calamitous Birth" {
 		//generate lithoid species
 		species.popType = "Lithoid"
+		species.traits = append(species.traits, originTraits["Lithoid"])
 		species.initialTraitPoints = 2
 	} else if empire.origin.name == "Ocean Paradise" {
 		//aquatic species, forced aqautic trait
 		species.popType = "Aquatic"
-		species.traits = append(species.traits, Trait{name: "Aquatic", cost: 1})
+		species.traits = append(species.traits, originTraits["Aquatic"])
 		species.initialTraitPoints = 2
 	} else {
+		switch empire.origin.name {
+		case "Clone Soldier":
+			species.traits = append(species.traits, originTraits["Clone Soldier"])
+		case "Post-Apocalyptic":
+			species.traits = append(species.traits, originTraits["Survivor"])
+		case "Void Dwellers":
+			species.traits = append(species.traits, originTraits["Void Dweller"])
+		case "Necrophage":
+			species.traits = append(species.traits, originTraits["Necrophage"])
+			generateSubSpecies = true
+		case "Subterrenean":
+			species.traits = append(species.traits, originTraits["Cave Dweller"])
+		case "Syncretic Evolution":
+			generateSubSpecies = true
+			subspecies.traits = append(subspecies.traits, originTraits["Serviles"])
+		}
 		//standard species
 		popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid"}
 		species.popType = popTypes[r.Intn(len(popTypes))]
 		species.initialTraitPoints = 2
 	}
-	return fillSpecies(species)
+	empire.mainSpecies = fillSpecies(species, empire.authority == "Hive Mind")
+	if generateSubSpecies {
+		empire.subSpecies = fillSpecies(subspecies, empire.authority == "Hive Mind")
+	}
+	return empire
 }
 
-func fillSpecies(s Species) Species {
-	for len(s.traits) < 5 {
-		filteredTraits := []Trait{}
-		for _, trait := range allTraits {
-			if trait.isAllowed(s) {
-				filteredTraits = append(filteredTraits, trait)
-			}
+func fillSpecies(s Species, gestalt bool) Species {
+	for {
+		result, ok := singleSpeciesTry(s, gestalt)
+		if ok {
+			return result
 		}
-		s.traits = append(s.traits, filteredTraits[r.Intn(len(filteredTraits))])
 	}
-	if s.availablePoints() > 0 {
-		// try to replace a trait with one costing one more
-	}
-	return s
 }
 
-func (s Species) availablePoints() int {
+func singleSpeciesTry(s Species, gestalt bool) (Species, bool) {
+	traitsToGenerate := r.Intn(5) + 1
+	result := []Trait{}
+	for i := 0; i < traitsToGenerate; i++ {
+		traits := availableTraits(s, gestalt)
+		result = append(result, traits[r.Intn(len(result))])
+	}
 	res := s.initialTraitPoints
-	for _, trait := range s.traits {
+	for _, trait := range result {
 		res += trait.cost
 	}
-	return res
+	if res == 0 {
+		s.traits = result
+		return s, true
+	}
+	return Species{}, false
+}
+
+func availableTraits(s Species, gestalt bool) []Trait {
+	result := []Trait{}
+	for _, trait := range allTraits {
+		if !trait.isAllowed(s) || (trait.nonGestalt && gestalt) {
+			continue
+		}
+		result = append(result, trait)
+	}
+	return result
 }
 
 type Empire struct {
@@ -286,10 +324,10 @@ type Species struct {
 type speciesPredicate func(s Species) bool
 
 type Trait struct {
-	cost                int
-	name                string
-	doestNotCountForMax bool
-	isAllowed           speciesPredicate
+	cost       int
+	name       string
+	nonGestalt bool
+	isAllowed  speciesPredicate
 }
 
 func always(empire Empire) bool {
@@ -458,7 +496,7 @@ var allTraits = []Trait{
 	{name: "Aquatic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))},
 	{name: "Charismatic", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Repugnant"))},
 	{name: "Communal", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Solitary"))},
-	{name: "Conformists", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Deviants"))},
+	{name: "Conformists", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Deviants")), nonGestalt: true},
 	{name: "Conservationist", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Wasteful"))},
 	{name: "Docile", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Unruly"))},
 	{name: "Enduring", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Fleeting", "Venerable"))},
@@ -476,12 +514,12 @@ var allTraits = []Trait{
 	{name: "Strong", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Very Strong", "Weak"))},
 	{name: "Very Strong", cost: 3, isAllowed: andS(excludeType("Machine"), excludeTrait("Strong", "Weak"))},
 	{name: "Talented", cost: 1, isAllowed: andS(excludeType("Machine"))},
-	{name: "Thrifty", cost: 2, isAllowed: andS(excludeType("Machine"))},
+	{name: "Thrifty", cost: 2, isAllowed: andS(excludeType("Machine")), nonGestalt: true},
 	{name: "Traditional", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Quarrelsome"))},
 	{name: "Nonadaptive", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Adaptive", "Extremely Adaptive", "Lithoid"))},
 	{name: "Repugnant", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Charismatic"))},
 	{name: "Solitary", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Communal"))},
-	{name: "Deviants", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Conformists"))},
+	{name: "Deviants", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Conformists")), nonGestalt: true},
 	{name: "Wasteful", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Conservationist"))},
 	{name: "Unruly", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Docile"))},
 	{name: "Fleeting", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Enduring", "Venerable"))},
@@ -490,20 +528,13 @@ var allTraits = []Trait{
 	{name: "Slow Breeders", cost: -2, isAllowed: andS(excludeType("Machine"), excludeTrait("Rapid Breeders", "Lithoid", "Clone Soldier"))},
 	{name: "Weak", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Strong", "Very Strong"))},
 	{name: "Quarrelsome", cost: -1, isAllowed: andS(excludeType("Machine"), excludeTrait("Traditional"))},
-	{name: "Decadent", cost: -1, isAllowed: andS(excludeType("Machine"))},
+	{name: "Decadent", cost: -1, isAllowed: andS(excludeType("Machine")), nonGestalt: true},
 	{name: "Phototropic", cost: 1, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Radiotropic", "Cave Dweller"))},
 	{name: "Radiotropic", cost: 2, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Phototropic"))},
 	{name: "Budding", cost: 2, isAllowed: andS(includeType("Plantoid", "Fungoid"), excludeTrait("Slow Breeders", "Rapid Breeders", "Clone Soldier", "Necrophage"))},
-	{name: "Lithoid", cost: 0, doestNotCountForMax: true, isAllowed: never},
 	{name: "Gaseous Byproducts", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Scintillating Skin", "Volatile Excretions"))},
 	{name: "Scintillating Skin", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Volatile Excretions"))},
 	{name: "Volatile Excretions", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Scintillating Skin"))},
-	{name: "Serviles", cost: 1, isAllowed: never},
-	{name: "Clone Soldier", cost: 0, doestNotCountForMax: true, isAllowed: never},
-	{name: "Survivor", cost: 0, doestNotCountForMax: true, isAllowed: never},
-	{name: "Void Dweller", cost: 0, doestNotCountForMax: true, isAllowed: never},
-	{name: "Necrophage", cost: 0, doestNotCountForMax: true, isAllowed: never},
-	{name: "Cave Dweller", cost: 0, doestNotCountForMax: true, isAllowed: never},
 	{name: "Double Jointed", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Bulky"))},
 	{name: "Durable", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("High Maintenance"))},
 	{name: "Efficient Processors", cost: 3, isAllowed: andS(includeType("Machine"))},
@@ -523,6 +554,19 @@ var allTraits = []Trait{
 	{name: "High Bandwith", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Streamlined Protocols"))},
 	{name: "Learning Algorithms", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Repurposed Hardware"))},
 	{name: "Repurposed Hardware", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Learning Algorithms"))},
+}
+
+var originTraits = make(map[string]Trait)
+
+func init() {
+	originTraits["Lithoid"] = Trait{name: "Lithoid", cost: 0, isAllowed: never}
+	originTraits["Serviles"] = Trait{name: "Serviles", cost: 1, isAllowed: never}
+	originTraits["Clone Soldier"] = Trait{name: "Clone Soldier", cost: 0, isAllowed: never}
+	originTraits["Survivor"] = Trait{name: "Survivor", cost: 0, isAllowed: never}
+	originTraits["Void Dweller"] = Trait{name: "Void Dweller", cost: 0, isAllowed: never}
+	originTraits["Necrophage"] = Trait{name: "Necrophage", cost: 0, isAllowed: never}
+	originTraits["Cave Dweller"] = Trait{name: "Cave Dweller", cost: 0, isAllowed: never}
+	originTraits["Aquatic"] = Trait{name: "Aquatic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))}
 }
 
 func never(s Species) bool {

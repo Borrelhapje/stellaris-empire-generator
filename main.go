@@ -51,6 +51,27 @@ func (d *data) Render() app.UI {
 				app.Label().Text("Planet Class:").For("planet"),
 				app.Span().ID("planet").Text(d.Empires[i].homeplanet),
 				app.Br(),
+				app.Div().Body(
+					app.Span().Text("Main Species:"),
+					app.Br(),
+					app.Label().Text("Type").For("MainType"),
+					app.Span().ID("MainType").Text(d.Empires[i].mainSpecies.popType),
+					app.Ul().Body(app.Range(d.Empires[i].mainSpecies.traits).Slice(func(j int) app.UI {
+						trait := d.Empires[i].mainSpecies.traits[j]
+						return app.Li().Text(trait.name)
+					})),
+					app.If(len(d.Empires[i].subSpecies.traits) > 0, app.Div().Body(
+						app.Span().Text("Sub Species:"),
+						app.Br(),
+						app.Label().Text("Type").For("SubType"),
+						app.Span().ID("SubType").Text(d.Empires[i].subSpecies.popType),
+						app.Ul().Body(app.Range(d.Empires[i].subSpecies.traits).Slice(func(j int) app.UI {
+							trait := d.Empires[i].subSpecies.traits[j]
+							return app.Li().Text(trait.name)
+						})),
+					)),
+				),
+				app.Br(),
 				app.Br(),
 			)
 		}),
@@ -184,7 +205,10 @@ func chooseHomeplanet(empire Empire) Empire {
 func generateSpecies(empire Empire) Empire {
 	species := Species{}
 	generateSubSpecies := false
-	subspecies := Species{}
+	popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid"}
+	subspecies := Species{
+		initialTraitPoints: 2,
+	}
 	if empire.authority == "Machine Intelligence" {
 		//generate machine species
 		species.popType = "Machine"
@@ -217,12 +241,12 @@ func generateSpecies(empire Empire) Empire {
 			subspecies.traits = append(subspecies.traits, originTraits["Serviles"])
 		}
 		//standard species
-		popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid"}
 		species.popType = popTypes[r.Intn(len(popTypes))]
 		species.initialTraitPoints = 2
 	}
 	empire.mainSpecies = fillSpecies(species, empire.authority == "Hive Mind")
 	if generateSubSpecies {
+		species.popType = popTypes[r.Intn(len(popTypes))]
 		empire.subSpecies = fillSpecies(subspecies, empire.authority == "Hive Mind")
 	}
 	return empire
@@ -238,18 +262,17 @@ func fillSpecies(s Species, gestalt bool) Species {
 }
 
 func singleSpeciesTry(s Species, gestalt bool) (Species, bool) {
-	traitsToGenerate := r.Intn(5) + 1
-	result := []Trait{}
+	traitCountOptions := []int{1, 2, 3, 3, 4, 4, 5, 5, 5}
+	traitsToGenerate := traitCountOptions[r.Intn(len(traitCountOptions))]
 	for i := 0; i < traitsToGenerate; i++ {
 		traits := availableTraits(s, gestalt)
-		result = append(result, traits[r.Intn(len(result))])
+		s.traits = append(s.traits, traits[r.Intn(len(traits))])
 	}
 	res := s.initialTraitPoints
-	for _, trait := range result {
-		res += trait.cost
+	for _, trait := range s.traits {
+		res -= trait.cost
 	}
 	if res == 0 {
-		s.traits = result
 		return s, true
 	}
 	return Species{}, false
@@ -257,9 +280,15 @@ func singleSpeciesTry(s Species, gestalt bool) (Species, bool) {
 
 func availableTraits(s Species, gestalt bool) []Trait {
 	result := []Trait{}
+outer:
 	for _, trait := range allTraits {
 		if !trait.isAllowed(s) || (trait.nonGestalt && gestalt) {
 			continue
+		}
+		for _, sTrait := range s.traits {
+			if trait.name == sTrait.name {
+				continue outer
+			}
 		}
 		result = append(result, trait)
 	}
@@ -544,14 +573,14 @@ var allTraits = []Trait{
 	{name: "Mass-Produced", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Custom-Made"))},
 	{name: "Power Drills", cost: 2, isAllowed: andS(includeType("Machine"))},
 	{name: "Recycled", cost: 2, isAllowed: andS(includeType("Machine"), excludeTrait("Luxurious"))},
-	{name: "Streamlined Protocols", cost: 2, isAllowed: andS(includeType("Machine"), excludeTrait("High Bandwith"))},
+	{name: "Streamlined Protocols", cost: 2, isAllowed: andS(includeType("Machine"), excludeTrait("High Bandwidth"))},
 	{name: "Superconducive", cost: 2, isAllowed: andS(includeType("Machine"))},
 	{name: "Bulky", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Double Jointed"))},
 	{name: "High Maintenance", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Durable"))},
 	{name: "Uncanny", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Emotion Emulators"))},
 	{name: "Custom-Made", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Mass-Produced"))},
 	{name: "Luxurious", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Recycled"))},
-	{name: "High Bandwith", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Streamlined Protocols"))},
+	{name: "High Bandwidth", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Streamlined Protocols"))},
 	{name: "Learning Algorithms", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Repurposed Hardware"))},
 	{name: "Repurposed Hardware", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Learning Algorithms"))},
 }

@@ -206,7 +206,7 @@ func chooseHomeplanet(empire Empire) Empire {
 func generateSpecies(empire Empire) Empire {
 	species := Species{}
 	generateSubSpecies := false
-	popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid"}
+	popTypes := []string{"Aquatic", "Mammalian", "Reptilian", "Avian", "Arthropoid", "Molluscoid", "Fungoid", "Plantoid", "Lithoid", "Necroid", "Toxoid"}
 	subspecies := Species{
 		initialTraitPoints: 2,
 	}
@@ -257,28 +257,28 @@ func generateSpecies(empire Empire) Empire {
 		species.popType = popTypes[r.Intn(len(popTypes))]
 		species.initialTraitPoints = 2
 	}
-	empire.mainSpecies = fillSpecies(species, empire.authority == "Hive Mind")
+	empire.mainSpecies = fillSpecies(species, empire.authority == "Hive Mind", empire.origin.name == "Overtuned")
 	if generateSubSpecies {
 		subspecies.popType = popTypes[r.Intn(len(popTypes))]
-		empire.subSpecies = fillSpecies(subspecies, empire.authority == "Hive Mind")
+		empire.subSpecies = fillSpecies(subspecies, empire.authority == "Hive Mind", empire.origin.name == "Overtuned")
 	}
 	return empire
 }
 
-func fillSpecies(s Species, gestalt bool) Species {
+func fillSpecies(s Species, gestalt bool, overtuned bool) Species {
 	for {
-		result, ok := singleSpeciesTry(s, gestalt)
+		result, ok := singleSpeciesTry(s, gestalt, overtuned)
 		if ok {
 			return result
 		}
 	}
 }
 
-func singleSpeciesTry(s Species, gestalt bool) (Species, bool) {
+func singleSpeciesTry(s Species, gestalt bool, overtuned bool) (Species, bool) {
 	traitCountOptions := []int{1, 2, 3, 3, 4, 4, 5, 5, 5}
 	traitsToGenerate := traitCountOptions[r.Intn(len(traitCountOptions))]
 	for i := 0; i < traitsToGenerate; i++ {
-		traits := availableTraits(s, gestalt)
+		traits := availableTraits(s, gestalt, overtuned)
 		s.traits = append(s.traits, traits[r.Intn(len(traits))])
 	}
 	res := s.initialTraitPoints
@@ -291,7 +291,7 @@ func singleSpeciesTry(s Species, gestalt bool) (Species, bool) {
 	return Species{}, false
 }
 
-func availableTraits(s Species, gestalt bool) []Trait {
+func availableTraits(s Species, gestalt bool, overtuned bool) []Trait {
 	result := []Trait{}
 outer:
 	for _, trait := range allTraits {
@@ -304,6 +304,20 @@ outer:
 			}
 		}
 		result = append(result, trait)
+	}
+	if overtuned {
+	overtunedLoop:
+		for _, trait := range overtunedTraits {
+			if !trait.isAllowed(s) || (trait.nonGestalt && gestalt) {
+				continue
+			}
+			for _, sTrait := range s.traits {
+				if trait.name == sTrait.name {
+					continue overtunedLoop
+				}
+			}
+			result = append(result, trait)
+		}
 	}
 	return result
 }
@@ -464,10 +478,10 @@ var allCivics = []Civic{
 	{name: "Cutthroat Politics", isAllowed: normalAuth()},
 	{name: "Diplomatic Corps", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Inward Perfection"))},
 	{name: "Efficient Bureaucracy", isAllowed: normalAuth()},
-	{name: "Environmentalist", isAllowed: normalAuth()},
+	{name: "Environmentalist", isAllowed: and(normalAuth(), excludeCivic(("Relentless Industrialists")))},
 	{name: "Functional Architecture", isAllowed: normalAuth()},
 	{name: "Masterful Crafters", isAllowed: normalAuth()},
-	{name: "Memorialists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"))},
+	{name: "Memorialists", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers", "Relentless Industrialists"))},
 	{name: "Merchant Guilds", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Aristocratic Elite", "Technocracy"))},
 	{name: "Mining Guilds", isAllowed: normalAuth()},
 	{name: "Philosopher King", isAllowed: auth("Dictatorial", "Imperial")},
@@ -482,7 +496,7 @@ var allCivics = []Civic{
 	{name: "Exalted Priesthood", isAllowed: and(auth("Oligarchy", "Dictatorial"), excludeCivic("Aristocratic Elite", "Merchant Guilds", "Technocracy"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
 	{name: "Feudal Society", isAllowed: auth("Imperial")},
 	{name: "Free Haven", isAllowed: and(normalAuth(), excludeCivic("Corvee System"), includeEthic("Xenophile", "Fanatic Xenophile"))},
-	{name: "Idyllic Bloom", isAllowed: normalAuth()},
+	{name: "Idyllic Bloom", isAllowed: and(normalAuth(), excludeCivic("Relentless Industrialists"))},
 	{name: "Imperial Cult", isAllowed: and(auth("Imperial"), includeEthic("Spiritualist", "Fanatic Spiritualist"), includeEthic("Authoritarian", "Fanatic Authoritarian"))},
 	{name: "Inward Perfection", isAllowed: and(normalAuth(), excludeCivic("Pompous Purists"), includeEthic("Pacifist", "Fanatic Pacifist"), includeEthic("Xenophobe", "Fanatic Xenophobe"))},
 	{name: "Meritocracy", isAllowed: auth("Democratic", "Oligarchy")},
@@ -493,10 +507,15 @@ var allCivics = []Civic{
 	{name: "Slaver Guilds", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"), includeEthic("Authoritarian", "Fanatic Authoritarian"))},
 	{name: "Technocracy", isAllowed: and(normalAuth(), excludeCivic("Exalted Priesthood", "Merchant Guilds", "Aristocratic Elite", "Shared Burdens"), includeEthic("Materialist", "Fanatic Materialist"))},
 	{name: "Warrior Culture", isAllowed: and(normalAuth(), excludeCivic("Pleasure Seekers"), includeEthic("Militarist", "Fanatic Militarist"))},
+	{name: "Mutagenic Spas", isAllowed: auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate")},
+	{name: "Relentless Industrialists", isAllowed: and(auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate"), includeEthic("Materialist", "Fanatic Materialist"), excludeCivic("Agrarian Idyll", "Environmentalist", "Idyllic Bloom", "Memorialists"))},
+	{name: "Scavengers", isAllowed: and(auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate"))},
+	{name: "Permutation Pools", isAllowed: auth("Hive Mind")},
+	{name: "Hyper Lubrication Basin", isAllowed: auth("Machine Intelligence")},
 	//here we have the civics with a slight edit to their requirements, because their ethics are very strict
 	{name: "Idealistic Foundation", isAllowed: and(normalAuth(), includeEthic("Egalitarian", "Fanatic Egalitarian"))},
 	{name: "Reanimators", isAllowed: and(normalAuth(), excludeCivic("Citizen Service"), excludeEthic("Pacifist", "Fanatic Pacifist"))},
-	{name: "Agrarian Idyll", isAllowed: and(normalAuth(), excludeCivic("Anglers"), includeEthic("Pacifist", "Fanatic Pacifist"))},
+	{name: "Agrarian Idyll", isAllowed: and(normalAuth(), excludeCivic("Anglers", "Relentless Industrialists"), includeEthic("Pacifist", "Fanatic Pacifist"))},
 	{name: "Barbaric Despoilers", isAllowed: and(normalAuth(), excludeCivic("Fanatic Purifiers"), includeEthic("Militarist", "Fanatic Militarist"), includeEthic("Authoritarian", "Fanatic Authoritarian", "Xenophobe", "Fanatic Xenophobe"), excludeEthic("Xenophile", "Fanatic Xenophile"))},
 	{name: "Fanatic Purifiers", isAllowed: and(normalAuth(), excludeCivic("Barbaric Despoilers", "Pompous Purists"), includeEthic("Fanatic Xenophobe"), includeEthic("Militarist", "Spiritualist")), genocidal: true},
 }
@@ -505,7 +524,7 @@ var allOrigins = []Origin{
 	{name: "Prosperous Unification", isAllowed: always},
 	{name: "Mechanist", isAllowed: and(includeEthic("Materialist", "Fanatic Materialist"), excludeCivic("Permanent Employment"))},
 	{name: "Syncretic Evolution", isAllowed: and(excludeEthic("Gestalt Consciousness"), excludeCivic("Fanatic Purifiers"))},
-	{name: "Life-Seeded", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Anglers"))},
+	{name: "Life-Seeded", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Anglers", "Mutagenic Spas", "Relentless Industrialists", "Permutation Pools"))},
 	{name: "Post-Apocalyptic", isAllowed: and(notAuth("Machine Intelligence"), excludeCivic("Agrarian Idyll", "Anglers"))},
 	{name: "Remnants", isAllowed: excludeCivic("Agrarian Idyll")},
 	{name: "Shattered Ring", isAllowed: excludeCivic("Agrarian Idyll", "Anglers")},
@@ -529,6 +548,8 @@ var allOrigins = []Origin{
 	{name: "Slingshot to the Stars", isAllowed: always},
 	{name: "Teachers of the Shroud", isAllowed: and(includeEthic("Spiritualist", "Fanatic Spiritualist"), excludeCivic("Fanatic Purifiers"))},
 	{name: "Imperial Fiefdom", isAllowed: excludeCivic("Inward Perfection", "Fanatic Purifiers", "Devouring Swarm", "Terravore", "Driven Assimilator", "Determined Exterminator")},
+	{name: "Knights of the Toxic God", isAllowed: and(excludeCivic("Fanatic Purifiers"), excludeEthic("Gestalt Consciousness"))},
+	{name: "Overtuned", isAllowed: notAuth("Machine Intelligence")},
 }
 
 var allTraits = []Trait{
@@ -596,6 +617,29 @@ var allTraits = []Trait{
 	{name: "High Bandwidth", cost: -2, isAllowed: andS(includeType("Machine"), excludeTrait("Streamlined Protocols"))},
 	{name: "Learning Algorithms", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Repurposed Hardware"))},
 	{name: "Repurposed Hardware", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Learning Algorithms"))},
+	{name: "Incubators", cost: 2, isAllowed: andS(excludeTrait("Slow Breeders", "Rapid Breeders", "Budding"))},
+	{name: "Noxious", cost: 1, isAllowed: sAlways},
+	{name: "Inorganic Breath", cost: 3, isAllowed: sAlways},
+}
+
+var overtunedTraits = []Trait{
+	{name: "Augmented Intelligence", cost: 1, isAllowed: sAlways},
+	{name: "Crafted Smiles", cost: 1, isAllowed: sAlways},
+	{name: "Dedicated Miner", cost: 1, isAllowed: sAlways},
+	{name: "Expressed Tradition", cost: 1, isAllowed: sAlways},
+	{name: "Farm Appendages", cost: 1, isAllowed: sAlways},
+	{name: "Gene Mentorship", cost: 1, isAllowed: sAlways},
+	{name: "Juiced Power", cost: 1, isAllowed: sAlways},
+	{name: "Low Maintenance", cost: 1, isAllowed: sAlways},
+	{name: "Spliced Adaptability", cost: 1, isAllowed: sAlways},
+	{name: "Technical Talent", cost: 1, isAllowed: sAlways},
+	{name: "Elevated Synapses", cost: 2, isAllowed: sAlways},
+	{name: "Pre-Planned Growth", cost: 2, isAllowed: sAlways},
+	{name: "Excessive Endurance", cost: 3, isAllowed: sAlways},
+}
+
+func sAlways(s Species) bool {
+	return true
 }
 
 var originTraits = make(map[string]Trait)

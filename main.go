@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
@@ -17,17 +15,15 @@ func main() {
 	fmt.Println("Seed is " + fmt.Sprint(seed))
 	app.Route("/", &data{})
 	app.RunWhenOnBrowser()
-
-	http.Handle("/", &app.Handler{
+	err := app.GenerateStaticWebsite("docs", &app.Handler{
 		Name:        "Stellaris",
 		Description: "A Stellaris Empire Generator",
 		Styles: []string{
-			"/web/app.css", // Loads hello.css file.
+			"/web/app.css",
 		},
 	})
-
-	if err := http.ListenAndServe(":8000", nil); err != nil {
-		log.Fatal(err)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -510,8 +506,12 @@ var allCivics = []Civic{
 	{name: "Mutagenic Spas", isAllowed: auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate")},
 	{name: "Relentless Industrialists", isAllowed: and(auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate"), includeEthic("Materialist", "Fanatic Materialist"), excludeCivic("Agrarian Idyll", "Environmentalist", "Idyllic Bloom", "Memorialists"))},
 	{name: "Scavengers", isAllowed: and(auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate"))},
+	{name: "Ascensionists", isAllowed: and(auth("Democratic", "Oligarchy", "Dictatorial", "Imperial", "Corporate"), includeEthic("Spiritualist", "Fanatic Spiritualist"))},
 	{name: "Permutation Pools", isAllowed: auth("Hive Mind")},
+	{name: "Cordiceptic Drones", isAllowed: auth("Hive Mind")},
+	{name: "Elevational Contemplations", isAllowed: auth("Hive Mind")},
 	{name: "Hyper Lubrication Basin", isAllowed: auth("Machine Intelligence")},
+	{name: "Elevational Hypotheses", isAllowed: auth("Machine Intelligence")},
 	//here we have the civics with a slight edit to their requirements, because their ethics are very strict
 	{name: "Idealistic Foundation", isAllowed: and(normalAuth(), includeEthic("Egalitarian", "Fanatic Egalitarian"))},
 	{name: "Reanimators", isAllowed: and(normalAuth(), excludeCivic("Citizen Service"), excludeEthic("Pacifist", "Fanatic Pacifist"))},
@@ -556,7 +556,7 @@ var allTraits = []Trait{
 	{name: "Adaptive", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Extremely Adaptive", "Nonadaptive", "Lithoid"))},
 	{name: "Extremely Adaptive", cost: 4, isAllowed: andS(excludeType("Machine"), excludeTrait("Adaptive", "Nonadaptive", "Lithoid"))},
 	{name: "Agrarian", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Lithoid"))},
-	{name: "Aquatic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))},
+	{name: "Aquatic", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))},
 	{name: "Charismatic", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Repugnant"))},
 	{name: "Communal", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Solitary"))},
 	{name: "Conformists", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Deviants")), nonGestalt: true},
@@ -598,6 +598,7 @@ var allTraits = []Trait{
 	{name: "Gaseous Byproducts", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Scintillating Skin", "Volatile Excretions"))},
 	{name: "Scintillating Skin", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Volatile Excretions"))},
 	{name: "Volatile Excretions", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Gaseous Byproducts", "Scintillating Skin"))},
+	{name: "Crystallization", cost: 2, isAllowed: andS(includeType("Lithoid"), excludeTrait("Slow Breeders", "Rapid Breeders", "Incubators", "Clone Soldier", "Necrophage"))},
 	{name: "Double Jointed", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Bulky"))},
 	{name: "Durable", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("High Maintenance"))},
 	{name: "Efficient Processors", cost: 3, isAllowed: andS(includeType("Machine"))},
@@ -618,8 +619,8 @@ var allTraits = []Trait{
 	{name: "Learning Algorithms", cost: 1, isAllowed: andS(includeType("Machine"), excludeTrait("Repurposed Hardware"))},
 	{name: "Repurposed Hardware", cost: -1, isAllowed: andS(includeType("Machine"), excludeTrait("Learning Algorithms"))},
 	{name: "Incubators", cost: 2, isAllowed: andS(excludeTrait("Slow Breeders", "Rapid Breeders", "Budding"))},
-	{name: "Noxious", cost: 1, isAllowed: sAlways},
-	{name: "Inorganic Breath", cost: 3, isAllowed: sAlways},
+	{name: "Noxious", cost: 1, isAllowed: andS(excludeType("Machine"))},
+	{name: "Inorganic Breath", cost: 3, isAllowed: andS(excludeType("Machine"))},
 }
 
 var overtunedTraits = []Trait{
@@ -630,7 +631,7 @@ var overtunedTraits = []Trait{
 	{name: "Farm Appendages", cost: 1, isAllowed: sAlways},
 	{name: "Gene Mentorship", cost: 1, isAllowed: sAlways},
 	{name: "Juiced Power", cost: 1, isAllowed: sAlways},
-	{name: "Low Maintenance", cost: 1, isAllowed: sAlways},
+	{name: "Low Maintenance", cost: 1, isAllowed: sAlways, nonGestalt: true},
 	{name: "Spliced Adaptability", cost: 1, isAllowed: sAlways},
 	{name: "Technical Talent", cost: 1, isAllowed: sAlways},
 	{name: "Elevated Synapses", cost: 2, isAllowed: sAlways},
@@ -652,7 +653,7 @@ func init() {
 	originTraits["Void Dweller"] = Trait{name: "Void Dweller", cost: 0, isAllowed: never}
 	originTraits["Necrophage"] = Trait{name: "Necrophage", cost: 0, isAllowed: never}
 	originTraits["Cave Dweller"] = Trait{name: "Cave Dweller", cost: 0, isAllowed: never}
-	originTraits["Aquatic"] = Trait{name: "Aquatic", cost: 1, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))}
+	originTraits["Aquatic"] = Trait{name: "Aquatic", cost: 2, isAllowed: andS(excludeType("Machine"), excludeTrait("Cave Dweller"))}
 }
 
 func never(s Species) bool {

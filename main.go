@@ -21,6 +21,7 @@ func main() {
 		Styles: []string{
 			"/web/app.css",
 		},
+		Resources: app.GitHubPages("stellaris-empire-generator"),
 	})
 	if err != nil {
 		panic(err)

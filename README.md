@@ -1,5 +1,5 @@
 # stellaris-empire-generator
-This generates 3 random empires to choose from. The web app is hosted at https://stellaris.helderman.xyz/, but feel free to host an instance yourself. If an invalid empire is generated feel free to create an issue.
+This generates 3 random empires to choose from. The web app is hosted at https://borrelhapje.github.io/stellaris-empire-generator/, but feel free to host an instance yourself. If an invalid empire is generated feel free to create an issue.
 
 ## TODO
  - on/off toggles for all civics, ethics, authorities, origins and traits

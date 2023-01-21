@@ -249,6 +249,8 @@ func generateSpecies(empire Empire) Empire {
 		case "Syncretic Evolution":
 			generateSubSpecies = true
 			subspecies.traits = append(subspecies.traits, originTraits["Serviles"])
+		case "Driven Assimilator":
+			generateSubSpecies = true
 		}
 		//standard species
 		species.popType = popTypes[r.Intn(len(popTypes))]

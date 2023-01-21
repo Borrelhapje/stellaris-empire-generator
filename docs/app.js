@@ -5,7 +5,7 @@ var goappNav = function () {};
 var goappOnUpdate = function () {};
 var goappOnAppInstallChange = function () {};
 
-const goappEnv = {"GOAPP_INTERNAL_URLS":"null","GOAPP_ROOT_PREFIX":"/stellaris-empire-generator","GOAPP_STATIC_RESOURCES_URL":"/stellaris-empire-generator","GOAPP_VERSION":"dcb88f5e386838c3801de6ccaeb0c10902ccfaa2"};
+const goappEnv = {"GOAPP_INTERNAL_URLS":"null","GOAPP_ROOT_PREFIX":"/stellaris-empire-generator","GOAPP_STATIC_RESOURCES_URL":"/stellaris-empire-generator","GOAPP_VERSION":"b86504c5b19c026b747754f72980775749494d77"};
 
 let goappServiceWorkerRegistration;
 let deferredPrompt = null;

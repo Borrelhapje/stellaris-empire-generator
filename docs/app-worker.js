@@ -1,8 +1,8 @@
-const cacheName = "app-" + "dcb88f5e386838c3801de6ccaeb0c10902ccfaa2";
+const cacheName = "app-" + "b86504c5b19c026b747754f72980775749494d77";
 const resourcesToCache = ["/stellaris-empire-generator","/stellaris-empire-generator/app.css","/stellaris-empire-generator/app.js","/stellaris-empire-generator/manifest.webmanifest","/stellaris-empire-generator/wasm_exec.js","/stellaris-empire-generator/web/app.css","/stellaris-empire-generator/web/app.wasm","https://storage.googleapis.com/murlok-github/icon-192.png","https://storage.googleapis.com/murlok-github/icon-512.png"];
 
 self.addEventListener("install", (event) => {
-  console.log("installing app worker dcb88f5e386838c3801de6ccaeb0c10902ccfaa2");
+  console.log("installing app worker b86504c5b19c026b747754f72980775749494d77");
 
   event.waitUntil(
     caches
@@ -28,7 +28,7 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
-  console.log("app worker dcb88f5e386838c3801de6ccaeb0c10902ccfaa2 is activated");
+  console.log("app worker b86504c5b19c026b747754f72980775749494d77 is activated");
 });
 
 self.addEventListener("fetch", (event) => {
